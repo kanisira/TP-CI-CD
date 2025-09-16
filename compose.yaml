@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  springboot-service:
+    build: ./springboot-app
+    container_name: springboot-service
+    ports:
+      - "8080:8080"
+    environment:
+      SERVER_PORT: 8080
+      MONGO_URI: mongodb://mongo-db:27017/demo   # hostname interne = mongo-db
+    depends_on:
+      mongo-db:
+        condition: service_healthy
+
+  mongo-db:
+    image: mongo:7
+    container_name: mongo-db
+    ports:
+      - "27019:27017"           # optionnel: accès depuis l'hôte (Compass, mongosh)
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping').ok\" | grep 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  flask-service:
+    build: ./flask-app
+    container_name: flask-service
+    ports:
+      - "5000:5000"
+    environment:
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_HOST: mysql-db      # hostname interne = mysql-db
+      MYSQL_PORT: 3306
+      MYSQL_DB: shop
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+
+  mysql-db:
+    image: mysql:8
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: shop
+    # ports:
+    #   - "3307:3306"           # optionnel: si tu veux MySQL accessible depuis l'hôte
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -proot"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  mongo_data:
+  mysql_data:
