@@ -1,6 +1,6 @@
 version: "3.8"
 
-services:
+mongo-db:
   springboot-service:
     build: ./springboot-app
     container_name: springboot-service
