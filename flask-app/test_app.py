@@ -11,28 +11,26 @@ def client():
     })
     with app.app_context():
         db.create_all()
-    client = app.test_client()
-    yield client
+    return app.test_client()
 
 def test_create_product(client):
-    resp = client.post(
+    r = client.post(
         "/api/products",
         data=json.dumps({"name": "Laptop", "price": 1200.5}),
-        content_type="application/json"
+        content_type="application/json",
     )
-    assert resp.status_code == 201
-    data = resp.get_json()
+    assert r.status_code == 201
+    data = r.get_json()
     assert data["name"] == "Laptop"
     assert data["price"] == 1200.5
 
 def test_get_products(client):
-    # seed
     client.post(
         "/api/products",
         data=json.dumps({"name": "Phone", "price": 800}),
-        content_type="application/json"
+        content_type="application/json",
     )
-    resp = client.get("/api/products")
-    assert resp.status_code == 200
-    products = resp.get_json()
+    r = client.get("/api/products")
+    assert r.status_code == 200
+    products = r.get_json()
     assert len(products) >= 1
